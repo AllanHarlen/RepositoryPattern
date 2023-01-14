@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using RepositoryGeneric.Data;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(p => p.UseMySql(ServerVersion.AutoDetect()));
+
+var connectionString = builder.Configuration.GetConnectionString("ConnectionStrings");
+builder.Services.AddDbContext<DataContext>(options => options.UseMySql(ServerVersion.AutoDetect(connectionString)));
 
 var app = builder.Build();
 
