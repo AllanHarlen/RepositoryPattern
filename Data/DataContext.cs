@@ -16,10 +16,10 @@ public partial class DataContext : DbContext
     {
     }
 
-    public virtual DbSet<Produto> Produtos { get; set; }
+    public virtual DbSet<Rota> Rotas { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-       => optionsBuilder.UseMySql("server=127.0.0.1;database=loja;uid=root;password=root;port=3306", ServerVersion.Parse("10.1.48-mariadb"));
+        => optionsBuilder.UseMySql("server=localhost;initial catalog=viagens;uid=root;pwd=root", ServerVersion.Parse("10.1.48-mariadb"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,18 +27,21 @@ public partial class DataContext : DbContext
             .UseCollation("latin1_swedish_ci")
             .HasCharSet("latin1");
 
-        modelBuilder.Entity<Produto>(entity =>
+        modelBuilder.Entity<Rota>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
+            entity
+                .HasNoKey()
+                .ToTable("rotas");
 
-            entity.ToTable("produtos");
-
-            entity.Property(e => e.Id)
-                .HasColumnType("int(11)")
-                .HasColumnName("id");
-            entity.Property(e => e.Nome)
+            entity.Property(e => e.Destino)
                 .HasMaxLength(50)
-                .HasColumnName("nome");
+                .HasColumnName("destino");
+            entity.Property(e => e.Origem)
+                .HasMaxLength(50)
+                .HasColumnName("origem");
+            entity.Property(e => e.Valor)
+                .HasPrecision(10)
+                .HasColumnName("valor");
         });
 
         OnModelCreatingPartial(modelBuilder);
