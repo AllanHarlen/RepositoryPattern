@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using RepositoryGeneric.Models;
+using RotasWebAPI.Models;
 
-namespace RepositoryGeneric.Data;
+namespace RotasWebAPI.Data;
 
 public partial class DataContext : DbContext
 {
@@ -16,10 +16,10 @@ public partial class DataContext : DbContext
     {
     }
 
-    public virtual DbSet<Rota> Rotas { get; set; }
+    public virtual DbSet<RotasDTO> Rotas { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseMySql("server=localhost;initial catalog=viagens;uid=root;pwd=root", ServerVersion.Parse("10.1.48-mariadb"));
+       => optionsBuilder.UseMySql("server=localhost;initial catalog=viagens;uid=root;pwd=root", ServerVersion.Parse("10.1.48-mariadb"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,12 +27,15 @@ public partial class DataContext : DbContext
             .UseCollation("latin1_swedish_ci")
             .HasCharSet("latin1");
 
-        modelBuilder.Entity<Rota>(entity =>
+        modelBuilder.Entity<RotasDTO>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("rotas");
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
+            entity.ToTable("rotas");
+
+            entity.Property(e => e.Id)
+                .HasColumnType("int(11)")
+                .HasColumnName("id");
             entity.Property(e => e.Destino)
                 .HasMaxLength(50)
                 .HasColumnName("destino");

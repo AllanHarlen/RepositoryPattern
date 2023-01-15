@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using RepositoryGeneric.Data;
+using RotasWebAPI.Data;
 using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +12,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = builder.Configuration.GetConnectionString("ConnectionStrings");
+var connectionString = builder.Configuration.GetConnectionString("Server");
 builder.Services.AddDbContext<DataContext>(options => options.UseMySql(ServerVersion.AutoDetect(connectionString)));
 
 var app = builder.Build();
