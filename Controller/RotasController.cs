@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RotasWebAPI.Data;
 using RotasWebAPI.Models;
 
@@ -53,50 +54,62 @@ namespace RepositoryGeneric.Controller
             IList<RotasDTO> listaRotas = await context.Rotas.ToListAsync();
             string rotadestino = "";
 
+            // Passa por todas as rotas.
             for (int i = 0; i < listaRotas.Count; i++)
-            {                
+            {               
+                // Verifica se existe uma rota com a origem e o destino solicitado, se existir adiciona.
                 if (listaRotas[i].Origem == origem && listaRotas[i].Destino == destino)
                 {
                     listaConexoes.Add(listaRotas[i]);
                 }
                 else
                 {
-                    SearchRotasDTO search = new SearchRotasDTO();
-                    search.ListaConexoes.Add(listaRotas[i]);
-                    rotadestino = listaRotas[i].Origem + " - " + listaRotas[i].Destino;
-                    search.ListaRotas = listaRotas.Where(p => p.Origem == listaRotas[i].Destino).ToList();
-
-                    bool continuar = true;
-                    while (continuar)
+                    // Caso não exista, vamos montar as conexões da Rota (Exemplo: Rota inicial, rota  2 3 até a Rota Final).
+                    if (listaRotas[i].Origem == origem)
                     {
-                        for (int a = 0; a < search.ListaRotas.Count; a++)
+                        SearchRotasDTO search = new SearchRotasDTO();
+                        search.ListaConexoes.Add(listaRotas[i]);
+
+                        // Primeira montagem da Rota.
+                        rotadestino = listaRotas[i].Destino;
+                        search.ListaRotas = listaRotas.Where(p => p.Origem == listaRotas[i].Destino).ToList();
+
+                        bool continuar = true;
+                        while (search.ListaRotas.Count > 0)
                         {
-                            search.ListaConexoes.Add(search.ListaRotas[a]);
-                            rotadestino = rotadestino + " - " + search.ListaRotas[a].Destino;
-                            var pesquisa = listaRotas.Where(A => A.Origem == search.ListaRotas[a].Destino).ToList();
-                            if (pesquisa.Count > 0)
+                            // Passa por todas as Rotas da Conexão (Há casos onde o destino pode ter 2 conexões diferente).
+                            for (int a = 0; a < search.ListaRotas.Count; a++)
                             {
-                                for (int e = 0; e < pesquisa.Count; e++)
+                                // Adiciona a Rota da Conexão a lista de conexões.
+                                search.ListaConexoes.Add(search.ListaRotas[a]);                                   
+                                rotadestino = rotadestino + " - " + search.ListaRotas[a].Destino;
+
+                                // Verifica se há conexão de destino da conexão anterior.
+                                var pesquisa = listaRotas.Where(A => A.Origem == search.ListaRotas[a].Destino).ToList();
+                                if (pesquisa.Count > 0)
                                 {
-                                    rotadestino = rotadestino + " - " + pesquisa[e].Destino;
-                                    search.ListaRotas.Add(pesquisa[e]);
+                                    // Há casos em que a conexão anterior tenha destinos diferentes.
+                                    for (int e = 0; e < pesquisa.Count; e++)
+                                    {
+                                        // Como existe, vamos realimentar novamente a Lista de Rotas de Conexões.
+                                        search.ListaRotas.Add(pesquisa[e]);
+                                    }
+                                }
+                                else
+                                {
+                                    search.ListaRotas.Clear();
                                 }
                             }
-                            else
-                            {
-                                continuar = false;
-                            }
                         }
+
+                        RotasDTO nova = new RotasDTO();
+                        nova.Origem = origem;     
+                        nova.Destino = rotadestino;
+                        nova.Valor = search.ListaConexoes.Sum(q => q.Valor);
+                        listaConexoes.Add(nova);
                     }
-
-                    RotasDTO nova = new RotasDTO();
-                    nova.Origem = origem;     
-                    nova.Destino = rotadestino;
-                    nova.Valor = search.ListaConexoes.Sum(q => q.Valor);
-                    listaConexoes.Add(nova);
                 }
-            }
-
+            }                  
 
             return Ok(listaConexoes);
         }
